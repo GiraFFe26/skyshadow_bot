@@ -207,12 +207,12 @@ class login:
         soup = BeautifulSoup(driver.page_source, 'lxml')
         buttons_soup = soup.find('div', id='iProofList').find_all('div', class_='radio')[:-1]
         print(buttons_soup)
-        button = buttons_soup[num - 1].find('input').get('id')
-        if button == 'iProof0':
+        button = buttons_soup[num - 1].text
+        if 'Письмо' in button:
             return 'Напишите Ваш email полностью', 1, driver.close()
-        if button == 'iProof1':
+        elif 'SMS' in button:
             return 'Введите последние 4 цифры номера телефона', 2, driver.close()
-        if button == 'iProof2':
+        elif 'Authenticator' in button:
             buttons = driver.find_element(By.ID, 'iProofList').find_elements(By.NAME, 'proof')[:-1]
             buttons[num - 1].click()
             try:

@@ -65,14 +65,20 @@ class digiseller_api:
         for i in r['rows']:
             invoice_id = i['invoice_id']
             self.send_message(invoice_id, token)
-            product = self.get_product_info(invoice_id, token)
+            product = self.check_for_sheets(invoice_id, token)
             mail = i['email']
             date_pay = datetime.strptime(i['date_pay'], "%Y-%m-%d %H:%M:%S").strftime("%d.%m.%Y %H:%M")
             self.send_to_sheets(invoice_id, mail, product, date_pay)
 
-    def get_product_info(self, invoice_id, token):
+    def check_for_sheets(self, invoice_id, token):
         headers = {'Accept': 'application/json'}
-        r = requests.get(f'https://api.digiseller.ru/api/purchase/info/{invoice_id}?token={token}', headers=headers).json()['content']['options'][-2]
+        r = requests.get(f'https://api.digiseller.ru/api/purchase/info/{invoice_id}?token={token}', headers=headers).json()
+        print(r)
+        r = r['content']['options']
+        if r[-1]['name'] == 'Where can I contact you?' or r[-1]['name'] == 'Где с вами можно связаться?':
+            r = r[-2]
+        else:
+            r = r[-1]
         return f'{r["name"]} {r["user_data"]}'
 
     # ОТПРАВКА СООБЩЕНИЯ ( ЧТОБЫ ПЕРЕНЕСТИ НА НОВУЮ СТРОКУ ИСПОЛЬЗУЕТСЯ \n )
@@ -109,7 +115,7 @@ class digiseller_api:
 
         values = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
-            range=f"Весь отчет (10-11)!A:Z",
+            range=f"Весь отчет 11.09.22 - 11.10.22!A:Z",
         ).execute()
         x = len(values['values']) + 1
 
@@ -119,7 +125,7 @@ class digiseller_api:
             body={
                 "valueInputOption": "USER_ENTERED",
                 "data": [
-                    {"range": f"Весь отчет (10-11)!A{x}:D{x}",
+                    {"range": f"Весь отчет 11.09.22 - 11.10.22!A{x}:D{x}",
                      "majorDimension": "ROWS",
                      "values": [[invoice_id, mail, product, date_pay]]}
                 ]
