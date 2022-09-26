@@ -4,7 +4,7 @@ from fake_useragent import UserAgent
 import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.support import expected_conditions as ec
 from bs4 import BeautifulSoup
 
@@ -136,7 +136,12 @@ class login:
                 WebDriverWait(driver, self.delay).until(ec.element_to_be_clickable((By.ID, 'idSIButton9')))
             except TimeoutException:
                 time.sleep(self.delay)
-            driver.find_element(By.ID, 'idSIButton9').click()
+            try:
+                driver.find_element(By.ID, 'idSIButton9').click()
+            except ElementNotInteractableException:
+                driver.find_element(By.ID, 'idLbl_SAOTCAS_TD_Cb').click()
+                driver.save_screenshot('ENTERED.png')
+                return 'screen_accept', driver.close()
             time.sleep(7)
             driver.save_screenshot('ENTERED.png')
             return 'no_accept', driver.close()
@@ -273,19 +278,21 @@ class login:
         soup = BeautifulSoup(driver.page_source, 'lxml')
         buttons = driver.find_element(By.ID, 'iProofList').find_elements(By.NAME, 'proof')[:-1]
         buttons_soup = soup.find('div', id='iProofList').find_all('div', class_='radio')[:-1]
-        button = buttons_soup[num - 1].find('input').get('id')
-        if button == 'iProof0':
+        button = buttons_soup[num - 1].text
+        if 'Письмо' in button:
             buttons[num - 1].click()
             time.sleep(5)
-            send = driver.find_element(By.ID, 'iProofEmail').send_keys(info)
+            driver.find_element(By.ID, 'iProofEmail').send_keys(info)
             time.sleep(5)
             driver.find_element(By.ID, 'iSelectProofAction').click()
-        if button == 'iProof1':
+            time.sleep(10)
+        if 'SMS' in button:
             buttons[num - 1].click()
             time.sleep(5)
-            send = driver.find_element(By.ID, 'iProofPhone').send_keys(info)
+            driver.find_element(By.ID, 'iProofPhone').send_keys(info)
             time.sleep(5)
             driver.find_element(By.ID, 'iSelectProofAction').click()
+            time.sleep(10)
         driver.close()
 
     def accept_2(self, num, info):

@@ -74,7 +74,13 @@ class digiseller_api:
         headers = {'Accept': 'application/json'}
         r = requests.get(f'https://api.digiseller.ru/api/purchase/info/{invoice_id}?token={token}', headers=headers).json()
         print(r)
-        r = r['content']['options']
+        r = r['content']
+        item_id = int(r['item_id'])
+        with open('ids.txt', 'r', encoding='UTF-8') as file:
+            ids = [int(i.strip()) for i in file.readlines()]
+        if item_id in ids:
+            return r["name"]
+        r = r['options']
         if r[-1]['name'] == 'Where can I contact you?' or r[-1]['name'] == 'Где с вами можно связаться?':
             r = r[-2]
         else:
