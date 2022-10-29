@@ -81,8 +81,14 @@ class digiseller_api:
         if item_id in ids:
             return r["name"]
         r = r['options']
-        if r[-1]['name'] == 'Where can I contact you?' or r[-1]['name'] == 'Где с вами можно связаться?':
+        check = r[-1]['name']
+        if check == 'Where can I contact you?' or check == 'Где с вами можно связаться?':
             r = r[-2]
+        elif check == 'How do we log in to your account?' or check == 'Как нам войти в ваш аккаунт?':
+            if r[-2]['name'] == 'Where can I contact you?' or r[-2]['name'] == 'Где с вами можно связаться?':
+                r = r[-3]
+            else:
+                r = r[-2]
         else:
             r = r[-1]
         return f'{r["name"]} {r["user_data"]}'
